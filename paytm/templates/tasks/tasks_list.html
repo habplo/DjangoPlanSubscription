@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+
+{% block body %}
+
+{#    {% for message in messages %}#}
+{#    <div class="alert alert-danger alert-dismissible" role="alert">#}
+{#        <button type="button" class="close" data-dismiss="alert" aria-label="Close">#}
+{#            <span aria-hidden="true">&times;</span>#}
+{#        </button>#}
+{#        {{ message }} <a href="{% url 'upgrade_plan' %}">(upgrade)</a>#}
+{#    </div>#}
+{#{% endfor %}#}
+
+    <div class="row">
+        <div class="page-header">
+            <h1>List task items</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <ul class="list-group">
+                {% for object in object_list %}
+
+                    <li class="list-group-item">
+                                    {{ object }}
+                                    <a href="{% url 'tasks_del' pk=object.pk %}" class="btn btn-xs btn-danger pull-right">
+                                        {% bootstrap_icon "trash" %}
+                                    </a>
+
+                    </li>
+                {% empty %}
+                    There are no task objects for this user.
+                {% endfor %}
+            </ul>
+            <p>
+                <a href="{% url 'tasks_add' %}" class="btn btn-primary">
+                    {% bootstrap_icon "plus" %} Add new task
+                </a>
+            </p>
+        </div>
+    </div>
+{% endblock %}
