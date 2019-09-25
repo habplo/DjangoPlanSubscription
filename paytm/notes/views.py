@@ -77,12 +77,6 @@ def notesAdd(request):
         return HttpResponseRedirect(reverse('notes_list'))
     return render(request, 'notes/notes_form.html', {'form': form})
 
-
-def deleteNote(request):
-
-    return "True"
-
-
 class NotesCreateView(CreateView):
     model = notes
     form_class = NotesForm
