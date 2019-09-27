@@ -38,7 +38,8 @@ class tasksListView(ListView):
     model = tasks
 
     def get_queryset(self):
-        return super(tasksListView, self).get_queryset().all()
+        _ids_cust_tasks = list(custtask.objects.filter(User=self.request.user).values_list('tasks', flat=True))
+        return super(tasksListView, self).get_queryset().filter(id__in=_ids_cust_tasks)
 
 
 class TasksDeleteView(DeleteView):
@@ -54,4 +55,4 @@ class TasksDeleteView(DeleteView):
         pk = self.kwargs['pk']
         notes_dt = tasks.objects.filter(id=pk)
         notes_dt.delete()
-        return HttpResponseRedirect(reverse('tasks_list', kwargs={'pk': pk}))
+        return HttpResponseRedirect(reverse('tasks_list'))

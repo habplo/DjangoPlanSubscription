@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Subscription, Customer
+from .models import Subscription, Customer, PaytmHistory
 
 
 class SubscriptionAdmin(admin.ModelAdmin):
@@ -12,5 +12,10 @@ class CustomerAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'is_delete', 'created_at')
 
 
+class PaytmHistoryAdmin(admin.ModelAdmin):
+    list_display = ('user', 'MID', 'TXNAMOUNT', 'STATUS')
+
+
 admin.site.register(Subscription, SubscriptionAdmin)
 admin.site.register(Customer, CustomerAdmin)
+admin.site.register(PaytmHistory, PaytmHistoryAdmin)

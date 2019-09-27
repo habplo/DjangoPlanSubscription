@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.conf.urls import url
-
+from django.urls import re_path
+from .views import payment, response
 from plans.views import CreateOrderView, OrderListView, InvoiceDetailView, AccountActivationView, \
     OrderPaymentReturnView, CurrentPlanView, UpgradePlanView, OrderView, BillingInfoRedirectView, \
     BillingInfoCreateView, BillingInfoUpdateView, BillingInfoDeleteView, CreateOrderPlanChangeView, ChangePlanView, \
@@ -25,6 +26,9 @@ urlpatterns = [
     url(r'^billing/update/$', BillingInfoUpdateView.as_view(), name='billing_info_update'),
     url(r'^billing/delete/$', BillingInfoDeleteView.as_view(), name='billing_info_delete'),
     url(r'^invoice/(?P<pk>\d+)/preview/html/$', InvoiceDetailView.as_view(), name='invoice_preview_html'),
+
+    re_path(r'^payment/(?P<pk>\d+)/$', payment, name='payment'),
+    re_path(r'^response/', response, name='response'),
 ]
 
 if getattr(settings, 'DEBUG', False):

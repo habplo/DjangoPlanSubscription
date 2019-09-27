@@ -1,12 +1,14 @@
 from decimal import Decimal
 
-from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.core.exceptions import ImproperlyConfigured
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.utils.safestring import mark_safe
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, RedirectView, CreateView, UpdateView, View
 from django.db.models import Q
-from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
+from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden, HttpResponse
 from django.conf import settings
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
@@ -22,6 +24,9 @@ from plans.forms import CreateOrderForm, BillingInfoForm, FakePaymentsForm
 from plans.models import Quota, Invoice
 from plans.signals import order_started
 from plans.validators import plan_validation
+
+from .models import PaytmHistory
+from . import Checksum
 
 
 class AccountActivationView(LoginRequired, TemplateView):
@@ -481,3 +486,62 @@ class FakePaymentsView(LoginRequired, SingleObjectMixin, FormView):
             self.object.status = form['status'].value()
             self.object.save()
             return HttpResponseRedirect(reverse('order_payment_failure', kwargs={'pk': self.object.pk}))
+
+
+@login_required
+def payment(request, pk):
+    user = request.user
+    settings.USER = user
+    MERCHANT_KEY = settings.PAYTM_MERCHANT_KEY
+    MERCHANT_ID = settings.PAYTM_MERCHANT_ID
+    CALLBACK_URL = settings.HOST_URL + settings.PAYTM_CALLBACK_URL
+    # Generating unique temporary ids
+    order_id = Checksum.__id_generator__()
+    data = Order.objects.get(id=pk, user=request.user)
+    bill_amount = data.amount
+    if bill_amount:
+        data_dict = {
+            'MID': MERCHANT_ID,
+            'ORDER_ID': order_id,
+            'TXN_AMOUNT': bill_amount,
+            'CUST_ID': user.email,
+            'INDUSTRY_TYPE_ID': 'Retail',
+            'WEBSITE': settings.PAYTM_WEBSITE,
+            'CHANNEL_ID': 'WEB',
+            'CALLBACK_URL': CALLBACK_URL,
+        }
+        param_dict = data_dict
+        param_dict['CHECKSUMHASH'] = Checksum.generate_checksum(data_dict, MERCHANT_KEY)
+        return render(request, "paytm/payment.html", {'paytmdict': param_dict, 'user': user})
+    return HttpResponse("Bill Amount Could not find. ?bill_amount=10")
+
+
+@csrf_exempt
+def response(request):
+    if request.method == "POST":
+        MERCHANT_KEY = settings.PAYTM_MERCHANT_KEY
+        data_dict = {}
+        for key in request.POST:
+            data_dict[key] = request.POST[key]
+        verify = Checksum.verify_checksum(data_dict, MERCHANT_KEY, data_dict['CHECKSUMHASH'])
+        if verify:
+            for key in request.POST:
+                if key == "BANKTXNID" or key == "RESPCODE":
+                    if request.POST[key]:
+                        data_dict[key] = int(request.POST[key])
+                    else:
+                        data_dict[key] = 0
+                elif key == "TXNAMOUNT":
+                    data_dict[key] = float(request.POST[key])
+            PaytmHistory.objects.create(user=settings.USER, **data_dict)
+            if request.POST['STATUS'] == 'TXN_SUCCESS' or request.POST['RESPCODE'] == '01':
+                messages.success(request, mark_safe("Thanks for subscribing! We've successfully processed your "
+                                                    "payment. You can access your subscription information from <a "
+                                                    "href='/plan/upgrade/'>here</a>. If you have any "
+                                                    "further question please visit our help center."), extra_tags='safe')
+            else:
+                messages.error(request, "Your transaction was cancelled as it wasn't processing! Please try again")
+            return render(request, "paytm/response.html", {"paytm": data_dict})
+        else:
+            return messages.error(request, "checksum verify failed")
+    return HttpResponse(status=200)

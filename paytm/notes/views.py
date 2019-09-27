@@ -27,6 +27,7 @@ def getAllNotes(request):
         serializer = NoteSerializer(notes_dt, many=True)
         return Response(serializer.data)
 
+
 # rest-framework default authToken login api
 @csrf_exempt
 @api_view(['POST'])
@@ -60,7 +61,8 @@ class NotesListView(ListView):
     model = notes
 
     def get_queryset(self):
-        return super(NotesListView, self).get_queryset().all()
+        _ids_cust_notes = list(custnote.objects.filter(User=self.request.user).values_list('notes', flat=True))
+        return super(NotesListView, self).get_queryset().filter(id__in=_ids_cust_notes)
 
 
 @subscription_plan_permission
@@ -77,21 +79,6 @@ def notesAdd(request):
         return HttpResponseRedirect(reverse('notes_list'))
     return render(request, 'notes/notes_form.html', {'form': form})
 
-class NotesCreateView(CreateView):
-    model = notes
-    form_class = NotesForm
-
-    def get_initial(self):
-        initial = super(NotesCreateView, self).get_initial()
-        initial['user'] = self.request.user
-        return initial
-
-    def get_success_url(self):
-        return reverse('notes_list')
-
-    def get_queryset(self):
-        return super(NotesCreateView, self).get_queryset().filter()
-
 
 class NotesDeleteView(DeleteView):
     model = notes
@@ -106,4 +93,4 @@ class NotesDeleteView(DeleteView):
         pk = self.kwargs['pk']
         notes_dt = notes.objects.filter(id=pk)
         notes_dt.delete()
-        return HttpResponseRedirect(reverse('notes_list', kwargs={'pk': pk}))
+        return HttpResponseRedirect(reverse('notes_list'))

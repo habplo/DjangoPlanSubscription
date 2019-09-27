@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block body %}
+    <table class="plan_table">
+        <tbody>
+            {% for key,value in paytm.items %}
+                <tr class="quota_row">
+                    <th class="quota_header" style="font-style: italic; font-weight: 700;">{{ key }} :</th>
+                    <td class="" style="font-size: 15px;">{{value}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

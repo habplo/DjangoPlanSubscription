@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'plans',
     'ordered_model',
     'knox',
-    'bootstrap3'
+    'bootstrap3',
+    'paytm'
 
 ]
 
@@ -134,7 +135,6 @@ REST_KNOX = {
 }
 
 # Plans configuration
-
 PLANS_CURRENCY = 'EUR'
 # from plans.models import Invoice
 # PLANS_INVOICE_COUNTER_RESET = Invoice.NUMBERING.MONTHLY
@@ -182,3 +182,20 @@ STATICFILES_DIRS = (
 LOGIN_REDIRECT_URL = 'home'
 
 LOGOUT_REDIRECT_URL = 'home'
+
+# paytm
+PAYTM_MERCHANT_KEY = "bKMfNxPPf_QdZppa"
+PAYTM_MERCHANT_ID = "DIY12386817555501617"
+PAYTM_WEBSITE = 'WEB_STAGING'
+HOST_URL = "http://localhost:8000"
+PAYTM_CALLBACK_URL = "/plan/response/"
+
+if DEBUG:
+    PAYTM_MERCHANT_KEY = "bKMfNxPPf_QdZppa"
+    PAYTM_MERCHANT_ID = "DIY12386817555501617"
+    PAYTM_WEBSITE = 'WEBSTAGING'
+    HOST_URL = 'http://localhost:8000'
+
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+USER = "auth.User"

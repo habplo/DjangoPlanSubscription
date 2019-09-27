@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block body %}
+    <h2>{% trans "Subscription plan" %}</h2>
+    <hr>
+    {% include "plans/plan_table.html" %}
+{% endblock %}
